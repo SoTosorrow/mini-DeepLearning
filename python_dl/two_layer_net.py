@@ -1,3 +1,6 @@
+# coding: utf-8
+# 两层神经网络的简单实现
+
 import sys,os
 sys.path.append(os.pardir)
 from common.functions import *
@@ -46,25 +49,66 @@ class TwoLayerNet:
         return accuracy
 
     # 计算权重参数的梯度、输入数据x、监督数据t
-    def numerical_gradient(self,x,t):
-        loss_W = lambda W:self.loss(x, t)
+    def numerical_gradient(self, x, t):
+        loss_W = lambda W: self.loss(x, t)
         # 保存梯度的字典型变量(numerical_gradient方法返回值)
         grads = {}
         grads['W1'] = numerical_gradient(loss_W, self.params['W1'])
         grads['b1'] = numerical_gradient(loss_W, self.params['b1'])
         grads['W2'] = numerical_gradient(loss_W, self.params['W2'])
         grads['b2'] = numerical_gradient(loss_W, self.params['b2'])
-
+        
         return grads
+
 
     # numerical_gradient 高速版
     def gradient(self, x, t):
-        pass
+        W1, W2 = self.params['W1'], self.params['W2']
+        b1, b2 = self.params['b1'], self.params['b2']
+        grads = {}
+        
+        batch_num = x.shape[0]
+        
+        # forward
+        a1 = np.dot(x, W1) + b1
+        z1 = sigmoid(a1)
+        a2 = np.dot(z1, W2) + b2
+        y = softmax(a2)
+        
+        # backward
+        dy = (y - t) / batch_num
+        grads['W2'] = np.dot(z1.T, dy)
+        grads['b2'] = np.sum(dy, axis=0)
+        
+        da1 = np.dot(dy, W2.T)
+        dz1 = sigmoid_grad(a1) * da1
+        grads['W1'] = np.dot(x.T, dz1)
+        grads['b1'] = np.sum(dz1, axis=0)
 
+        return grads
+
+'''
+net = TwoLayerNet(784,100,10)
+print(net.params['W1'].shape)
+print(net.params['b1'].shape)
+print(net.params['W2'].shape)
+print(net.params['b2'].shape)
 
 x = np.random.rand(100,784) # shape = (100,784)
-t = x +1
-'''
+y = net.predict(x)
+t = np.random.rand(100,10)
+
+grads = net.gradient(x, t)
+print(grads['W1'])
+print(grads['b1'].shape)
+print(grads['W2'].shape)
+print(grads['b2'].shape)
+
+
+
+
+
+
 print('t:',t)
 net = TwoLayerNet(784,100,10)
 print('t2:',t)
